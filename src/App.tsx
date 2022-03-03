@@ -3,7 +3,7 @@ import logo from './logo.svg'
 import './App.css'
 
 const alreadyToken: any[string] = [];
-const ver = '0.0.5';
+const ver = '0.0.6';
 function App() {
     const [cpData,setCpData] = useState({
         cp: '',
@@ -48,7 +48,7 @@ function App() {
                 setMess('Send form 2 ok');
             }
         }
-        setTimeout((()=>{_do(cpData)}), 2000);
+        setTimeout((()=>{_do(cpData)}), 1000);
 
     }, [cpData]);
 
