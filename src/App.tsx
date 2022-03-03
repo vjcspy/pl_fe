@@ -2,6 +2,8 @@ import {useCallback, useEffect, useState} from 'react'
 import logo from './logo.svg'
 import './App.css'
 
+const alreadyToken: any[string] = [];
+const ver = '0.0.5';
 function App() {
     const [cpData,setCpData] = useState({
         cp: '',
@@ -12,22 +14,41 @@ function App() {
     const [mess, setMess] = useState('');
 
     const addCp = useCallback((cp) => {
-        setCpData({...cpData,cp})
-    }, [])
+        const newCp = {state: cpData.state,cp};
+        if(newCp.state === 0){
+            setMess('Chuẩn bị send form 1');
+        }else{
+            setMess('Chuẩn bị send form 2');
+        }
+        console.log('Lưu cpData',newCp);
+        setCpData(newCp)
+
+    }, [cpData])
 
     useEffect(() => {
-        const _do = async ()=>{
-            if (cpData.state === 0) {
-                const data = await fetch(`https://plbe.vm.test/sendform1?token=${cpData.cp}`);
-                setCpData({...cpData,state: 1})
+        console.log('run effect send form', cpData);
+        const _do = async (_data:any)=>{
+            if(_data.cp === '' || alreadyToken.includes(_data.cp)){
+                console.log('khong chay do bi trung');
+                return;
+            }
+            if (_data.state === 0) {
+                console.log('chay send form 1');
+                alreadyToken.push(_data.cp);
+                const data = await fetch(`https://plbe.vm.test/sendform1?token=${_data.cp}`);
+                setCpData({cp: '',state: 1})
                 setBeRes(await data.text());
+                setMess('Send form 1 ok');
             } else {
-                const data = await fetch(`https://plbe.vm.test/sendform2?token=${cpData.cp}`);
-                setCpData({...cpData,state: 0})
+                console.log('chay send form 2');
+                alreadyToken.push(_data.cp);
+                const data = await fetch(`https://plbe.vm.test/sendform2?token=${_data.cp}`);
+                setCpData({cp: '',state: 0})
                 setBeRes(await data.text());
+                setMess('Send form 2 ok');
             }
         }
-        _do();
+        setTimeout((()=>{_do(cpData)}), 2000);
 
     }, [cpData]);
 
@@ -46,7 +67,7 @@ function App() {
                 });
             });
         }
-    }, []);
+    }, [addCp]);
 
     return (
         <div className="App">
@@ -65,7 +86,7 @@ function App() {
                     </div>}
                 </div>
                 <p>
-                    Edit <code>App.tsx</code> and save to test HMR updates.
+                    Version {ver}
                 </p>
                 <p>
                     <a
