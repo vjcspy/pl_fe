@@ -1,11 +1,12 @@
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useEffect, useRef, useState} from 'react'
 import logo from './logo.svg'
 import './App.css'
 
 const alreadyToken: any[string] = [];
-const ver = '0.0.6';
+const ver = '0.0.11';
+
 function App() {
-    const [cpData,setCpData] = useState({
+    const [cpData, setCpData] = useState({
         cp: '',
         state: 0
     })
@@ -14,21 +15,23 @@ function App() {
     const [mess, setMess] = useState('');
 
     const addCp = useCallback((cp) => {
-        const newCp = {state: cpData.state,cp};
-        if(newCp.state === 0){
+        const newCp = {state: cpData.state, cp};
+        if (newCp.state === 0) {
             setMess('Chuẩn bị send form 1');
-        }else{
+        } else {
             setMess('Chuẩn bị send form 2');
         }
-        console.log('Lưu cpData',newCp);
+        console.log('Lưu cpData', newCp);
         setCpData(newCp)
 
     }, [cpData])
 
+    const btRef = useRef(null);
+
     useEffect(() => {
         console.log('run effect send form', cpData);
-        const _do = async (_data:any)=>{
-            if(_data.cp === '' || alreadyToken.includes(_data.cp)){
+        const _do = async (_data: any) => {
+            if (_data.cp === '' || alreadyToken.includes(_data.cp)) {
                 console.log('khong chay do bi trung');
                 return;
             }
@@ -36,19 +39,21 @@ function App() {
                 console.log('chay send form 1');
                 alreadyToken.push(_data.cp);
                 const data = await fetch(`https://plbe.vm.test/sendform1?token=${_data.cp}`);
-                setCpData({cp: '',state: 1})
+                setCpData({cp: '', state: 1})
                 setBeRes(await data.text());
                 setMess('Send form 1 ok');
             } else {
                 console.log('chay send form 2');
                 alreadyToken.push(_data.cp);
                 const data = await fetch(`https://plbe.vm.test/sendform2?token=${_data.cp}`);
-                setCpData({cp: '',state: 0})
+                setCpData({cp: '', state: 0})
                 setBeRes(await data.text());
                 setMess('Send form 2 ok');
             }
         }
-        setTimeout((()=>{_do(cpData)}), 1000);
+        setTimeout((() => {
+            _do(cpData)
+        }), 1000);
 
     }, [cpData]);
 
@@ -69,13 +74,39 @@ function App() {
         }
     }, [addCp]);
 
+    useEffect(() => {
+        // @ts-ignore
+        if (typeof btRef?.current?.click === 'function') {
+            let count = 0;
+            const _i = setInterval(() => {
+                    count++;
+                    if (count % 2 === 0) {
+                        // @ts-ignore
+                        btRef.current.click();
+                    } else {
+                        setTimeout(() => {
+                            // @ts-ignore
+                            btRef.current.click();
+                        }, 3500);
+                    }
+
+                },
+                3000)
+
+            return () => {
+                if (_i)
+                    clearInterval(_i);
+            }
+        }
+    }, [btRef]);
+
     return (
         <div className="App">
             <header className="App-header">
                 <img src={logo} className="App-logo" alt="logo"/>
                 <p>{mess}</p>
                 <div>
-                    <button type="button" onClick={() => genCap()}>
+                    <button ref={btRef} type="button" onClick={() => genCap()} style={{height: 200}}>
                         {!loading && <div className="token" style={{color: 'green'}}>
                             {cpData.cp}
                         </div>}
